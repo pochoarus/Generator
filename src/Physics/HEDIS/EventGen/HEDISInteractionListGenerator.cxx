@@ -64,8 +64,8 @@ InteractionList * HEDISInteractionListGenerator::CreateInteractionList(
 
   vector<InitialState> init;
   init.push_back(init_state);
-  InteractionList * intlist = this->CreateHEDISlist(init,inttype);
-
+  InteractionList * intlist = this->CreateHEDISlist(init,inttype,fIsGridSF);
+  
   if(intlist->size() == 0) {
      LOG("IntLst", pERROR)
          << "Returning NULL InteractionList for init-state: "
@@ -78,7 +78,7 @@ InteractionList * HEDISInteractionListGenerator::CreateInteractionList(
 }
 //____________________________________________________________________________
 InteractionList * HEDISInteractionListGenerator::CreateHEDISlist(
-    vector<InitialState> vinit, vector<InteractionType_t> vinttype) const
+    vector<InitialState> vinit, vector<InteractionType_t> vinttype, bool IsGridSF) const
 {
 
   InteractionList * intlist = new InteractionList;
@@ -87,40 +87,55 @@ InteractionList * HEDISInteractionListGenerator::CreateHEDISlist(
   for( ; init != vinit.end(); ++init) {
 
     vector<int> nucl;
-    if (init->Tgt().Z()>0)                nucl.push_back(kPdgProton);
-    if (init->Tgt().A()-init->Tgt().Z()>0) nucl.push_back(kPdgNeutron);
+    if (IsGridSF) {
+      if      (init->Tgt().Z()==1)                 nucl.push_back(kPdgProton);
+      else if (init->Tgt().A()-init->Tgt().Z()==1) nucl.push_back(kPdgNeutron);      
+      else {
+        LOG("HEDISStrucFunc", pERROR) << "GridSF only allows for free proton or neutron";
+        assert(0);
+      }
+    }
+    else {
+      if (init->Tgt().Z()>0)                 nucl.push_back(kPdgProton);
+      if (init->Tgt().A()-init->Tgt().Z()>0) nucl.push_back(kPdgNeutron);      
+    }
 
     vector<int>::const_iterator inucl = nucl.begin();
     for( ; inucl != nucl.end(); ++inucl) {
 
       vector<InteractionType_t>::const_iterator inttype = vinttype.begin();
       for( ; inttype != vinttype.end(); ++inttype) {
-      
         ProcessInfo proc(kScDeepInelastic,*inttype);
         Interaction * interaction = new Interaction(*init, proc);
         interaction->InitStatePtr()->TgtPtr()->SetHitNucPdg(*inucl);
-        multimap<int,bool> hq = this->GetHitQuarks(interaction);
-        multimap<int,bool>::const_iterator hqi = hq.begin();
-        for( ; hqi != hq.end(); ++hqi) {
-          int  quark_code = hqi->first;
-          bool from_sea   = hqi->second;
-          interaction->InitStatePtr()->TgtPtr()->SetHitQrkPdg(quark_code);
-          interaction->InitStatePtr()->TgtPtr()->SetHitSeaQrk(from_sea);
-          vector<int> fq = this->GetFinalQuarks(interaction);
-          vector<int>::const_iterator fqi = fq.begin();
-          for( ; fqi != fq.end(); ++fqi) {
-            XclsTag exclusive_tag;
-            exclusive_tag.SetFinalQuark (*fqi);
-            interaction->SetExclTag(exclusive_tag);
-            Interaction * intq = new Interaction(*interaction);
-            intlist->push_back(intq);
-          }   
+        if (IsGridSF) {
+          intlist->push_back(interaction);
         }
-        delete interaction;
+        else {
+          multimap<int,bool> hq = this->GetHitQuarks(interaction);
+          multimap<int,bool>::const_iterator hqi = hq.begin();
+          for( ; hqi != hq.end(); ++hqi) {
+            int  quark_code = hqi->first;
+            bool from_sea   = hqi->second;
+            interaction->InitStatePtr()->TgtPtr()->SetHitQrkPdg(quark_code);
+            interaction->InitStatePtr()->TgtPtr()->SetHitSeaQrk(from_sea);
+            vector<int> fq = this->GetFinalQuarks(interaction);
+            vector<int>::const_iterator fqi = fq.begin();
+            for( ; fqi != fq.end(); ++fqi) {
+              XclsTag exclusive_tag;
+              exclusive_tag.SetFinalQuark (*fqi);
+              interaction->SetExclTag(exclusive_tag);
+              Interaction * intq = new Interaction(*interaction);
+              intlist->push_back(intq);
+            }   
+          }          
+          delete interaction;
+        }
       }
     }
   }
 
+  
   return intlist;
 
 }
@@ -225,6 +240,8 @@ void HEDISInteractionListGenerator::LoadConfigData(void)
 
   GetParamDef("is-CC", fIsCC, false ) ;
   GetParamDef("is-NC", fIsNC, false ) ;
+
+  GetParam("Is-GridSF", fIsGridSF ) ;
 
 }
 

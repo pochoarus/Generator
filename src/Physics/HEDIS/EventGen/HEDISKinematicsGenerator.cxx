@@ -85,6 +85,7 @@ void HEDISKinematicsGenerator::ProcessEventRecord(GHepRecord * evrec) const
   Q2l.min = TMath::Max(Q2l.min,fSFQ2min);
   Q2l.max = TMath::Min(Q2l.max,fSFQ2max);
   xl.min  = TMath::Max(TMath::Max(xl.min,Q2l.min/2./M/Ev),fSFXmin);
+  xl.max  = TMath::Min(xl.max,fSFXmax);
 
   LOG("HEDISKinematics", pNOTICE) << "x: [" << xl.min << ", " << xl.max << "]"; 
   LOG("HEDISKinematics", pNOTICE) << "log10Q2: [" << Q2l.min << ", " << Q2l.max << "]"; 
@@ -253,6 +254,7 @@ void HEDISKinematicsGenerator::LoadConfig(void)
   // Limits from the SF tables that are useful to reduce computation 
   // time of the max cross section
   GetParam("XGrid-Min",  fSFXmin ) ;
+  GetParam("XGrid-Max",  fSFXmax ) ;
   GetParam("Q2Grid-Min", fSFQ2min ) ;
   GetParam("Q2Grid-Max", fSFQ2max ) ;
 

@@ -65,6 +65,8 @@ HEDISStrucFunc::HEDISStrucFunc(SF_info sfinfo)
   // Name of the directory where SF tables are (or will be) saved. 
   string SFname = basedir + "/" + RunOpt::Instance()->Tune()->Name();
 
+  fSF.LHAPDFmember = std::stoi(RunOpt::Instance()->Tune()->FitDataSetId());
+
   // Check that the directory where SF tables are stored exists
   LOG("HEDISStrucFunc", pWARN) << "SF are (or will be) in following directory: " << SFname;
   if ( gSystem->AccessPathName( SFname.c_str(), kReadPermission ) ) {
@@ -152,6 +154,10 @@ HEDISStrucFunc::HEDISStrucFunc(SF_info sfinfo)
     LOG("HEDISStrucFunc", pWARN) << "xGridMin = " << fSF.XGridMin;
     LOG("HEDISStrucFunc", pWARN) << "DANGER: An extrapolation will be done!!!!!";
   }
+  else if ( fSF.XGridMax > 1. ) {
+    LOG("HEDISStrucFunc", pFATAL) << "Upper boundary in X is bigger than 1.";
+    assert(0);
+  }
   else if ( fSF.Q2GridMin < Q2PDFmin ) {
     LOG("HEDISStrucFunc", pWARN) << "Lower boundary in Q2 is smaller than input PDF";
     LOG("HEDISStrucFunc", pWARN) << "Q2PDFmin = "  << Q2PDFmin;
@@ -167,7 +173,7 @@ HEDISStrucFunc::HEDISStrucFunc(SF_info sfinfo)
 
   // define arrays to fill from data files
   double dlogq2 = TMath::Abs( TMath::Log10(fSF.Q2GridMin)-TMath::Log10(fSF.Q2GridMax) ) / fSF.NGridQ2;
-  double dlogx  = TMath::Abs( TMath::Log10(fSF.XGridMin)-TMath::Log10(1.) ) / fSF.NGridX;
+  double dlogx  = TMath::Abs( TMath::Log10(fSF.XGridMin)-TMath::Log10(fSF.XGridMax) ) / fSF.NGridX;
   LOG("HEDISStrucFunc", pINFO) << "Grid x,Q2 :" << fSF.NGridX << " , " << fSF.NGridQ2;
   for ( double logq2 = TMath::Log10(fSF.Q2GridMin); logq2<TMath::Log10(fSF.Q2GridMax); logq2+= dlogq2 ) {
     double q2 = TMath::Power( 10, logq2 + 0.5*dlogq2 );
@@ -175,7 +181,7 @@ HEDISStrucFunc::HEDISStrucFunc(SF_info sfinfo)
     sf_q2_array.push_back(q2);
     LOG("HEDISStrucFunc", pDEBUG) << "q2: " << sf_q2_array.back();
   }
-  for ( double logx = TMath::Log10(fSF.XGridMin); logx<TMath::Log10(1.); logx+= dlogx ) {
+  for ( double logx = TMath::Log10(fSF.XGridMin); logx<TMath::Log10(fSF.XGridMax); logx+= dlogx ) {
     double x = TMath::Power( 10, logx + 0.5*dlogx );
     if ( x>1. ) continue;
     sf_x_array.push_back(x);
@@ -193,37 +199,63 @@ HEDISStrucFunc::HEDISStrucFunc(SF_info sfinfo)
   
   vector<InteractionType_t> inttype;
   inttype.push_back(kIntWeakCC);
-  inttype.push_back(kIntWeakNC);
+  if (!fSF.IsGridSF) inttype.push_back(kIntWeakNC);
   vector<InitialState> init_state;
   init_state.push_back(InitialState(1, 2, kPdgNuE));
   init_state.push_back(InitialState(1, 2, kPdgAntiNuE));
 
   HEDISInteractionListGenerator * helist = new HEDISInteractionListGenerator();
-  InteractionList * ilist = helist->CreateHEDISlist(init_state,inttype);
+  InteractionList * ilist = helist->CreateHEDISlist(init_state,inttype,fSF.IsGridSF);
 
   // Load structure functions for each quark at LO
   for(InteractionList::iterator in=ilist->begin(); in!=ilist->end(); ++in) {
 
-    string sfFile = SFname + "/QrkSF_LO_" + QrkSFName(*in) + ".dat";
-    // Make sure data files are available
-    LOG("HEDISStrucFunc", pINFO) << "Checking if file " << sfFile << " exists...";        
-    if ( gSystem->AccessPathName( sfFile.c_str()) ) {
-      LOG("HEDISStrucFunc", pWARN) << "File doesnt exist. SF table will be computed.";        
-      CreateQrkSF( *in, sfFile );
+    if (fSF.IsGridSF) {
+      string sfFile = SFname + "/SF_" + SFName(*in) + ".dat";
+      // Make sure data files are available
+      LOG("HEDISStrucFunc", pINFO) << "Checking if file " << sfFile << " exists...";        
+      if ( gSystem->AccessPathName( sfFile.c_str()) ) {
+        LOG("HEDISStrucFunc", pWARN) << "File doesnt exist. SF table will be computed.";        
+        CreateSF( *in, sfFile );
+      }
+      else if ( atoi(gSystem->GetFromPipe(("wc -w "+sfFile+" | awk '{print $1}'").c_str()))!=kSFT3*nx*ny ) {
+        LOG("HEDISStrucFunc", pWARN) << "File does not contain all the need points. SF table will be recomputed.";        
+        gSystem->Exec(("rm "+sfFile).c_str());
+        CreateSF( *in, sfFile );
+      }
+      std::ifstream sf_stream(sfFile.c_str(), std::ios::in);
+      // Loop over F1,F2,F3
+      for(int sf = 1; sf < kSFnumber; ++sf) {
+        // Loop over x/Q2 bins
+        for ( int ij=0; ij<nx*ny; ij++ ) sf_stream >> z[ij];
+        // Create SF tables with BLI2DNonUnifGrid using x,Q2 binning
+        fSFTables[SFCode(*in)].Table[(HEDISStrucFuncType_t)sf] = new genie::BLI2DNonUnifGrid( nx, ny, x, y, z );
+      }      
     }
-    else if ( atoi(gSystem->GetFromPipe(("wc -w "+sfFile+" | awk '{print $1}'").c_str()))!=kSFT3*nx*ny ) {
-      LOG("HEDISStrucFunc", pWARN) << "File does not contain all the need points. SF table will be recomputed.";        
-      gSystem->Exec(("rm "+sfFile).c_str());
-      CreateQrkSF( *in, sfFile );
+    else {
+      string sfFile = SFname + "/QrkSF_LO_" + QrkSFName(*in) + ".dat";
+      // Make sure data files are available
+      LOG("HEDISStrucFunc", pINFO) << "Checking if file " << sfFile << " exists...";        
+      if ( gSystem->AccessPathName( sfFile.c_str()) ) {
+        LOG("HEDISStrucFunc", pWARN) << "File doesnt exist. SF table will be computed.";        
+        CreateQrkSF( *in, sfFile );
+      }
+      else if ( atoi(gSystem->GetFromPipe(("wc -w "+sfFile+" | awk '{print $1}'").c_str()))!=kSFT3*nx*ny ) {
+        LOG("HEDISStrucFunc", pWARN) << "File does not contain all the need points. SF table will be recomputed.";        
+        gSystem->Exec(("rm "+sfFile).c_str());
+        CreateQrkSF( *in, sfFile );
+      }
+      std::ifstream sf_stream(sfFile.c_str(), std::ios::in);
+      // Loop over F1,F2,F3
+      for(int sf = 1; sf < kSFnumber; ++sf) {
+        // Loop over x/Q2 bins
+        for ( int ij=0; ij<nx*ny; ij++ ) sf_stream >> z[ij];
+        // Create SF tables with BLI2DNonUnifGrid using x,Q2 binning
+        fQrkSFLOTables[QrkSFCode(*in)].Table[(HEDISStrucFuncType_t)sf] = new genie::BLI2DNonUnifGrid( nx, ny, x, y, z );
+      }      
     }
-    std::ifstream sf_stream(sfFile.c_str(), std::ios::in);
-    // Loop over F1,F2,F3
-    for(int sf = 1; sf < kSFnumber; ++sf) {
-      // Loop over x/Q2 bins
-      for ( int ij=0; ij<nx*ny; ij++ ) sf_stream >> z[ij];
-      // Create SF tables with BLI2DNonUnifGrid using x,Q2 binning
-      fQrkSFLOTables[QrkSFCode(*in)].Table[(HEDISStrucFuncType_t)sf] = new genie::BLI2DNonUnifGrid( nx, ny, x, y, z );
-    }
+  
+
   }
 
   if (fSF.IsNLO) {
@@ -569,6 +601,60 @@ void HEDISStrucFunc::CreateNucSF( const Interaction * in, string sfFile )
 
 }
 #endif
+#ifdef __GENIE_LHAPDF6_ENABLED__
+//____________________________________________________________________________
+void HEDISStrucFunc::CreateSF( const Interaction * in, string sfFile )
+{
+
+  int cpdf = -999;
+
+  // variables used to tag the SF for particular channel
+  bool iscc = in->ProcInfo().IsWeakCC();
+  bool isnu = pdg::IsNeutrino(in->InitState().ProbePdg());
+
+  if ( iscc ) {
+    cpdf = (isnu) ? 1000 : 2000;
+  }    
+  else {
+    LOG("HEDISStrucFunc", pFATAL) << "NC contributions are not available in the GridSF method.";
+    assert(0);    
+  }
+  
+  // open file in which SF will be stored
+  std::ofstream sf_stream(sfFile.c_str());
+
+  double sign3 = isnu ? +1. : -1.;  // sign change for nu/nubar in F3
+  // loop over 3 different SF: F1,F2,F3
+  for(int sf = 1; sf < 4; sf++) {
+    for ( unsigned int i=0; i<sf_q2_array.size(); i++ ) {
+      double Q2 = sf_q2_array[i];
+      for ( unsigned int j=0; j<sf_x_array.size(); j++ ) {
+        double x = sf_x_array[j];
+
+        // Fill x,Q2 used to extract PDF. If values outside boundaries then freeze them.
+        double xPDF = TMath::Max( x, xPDFmin );
+        double Q2PDF = TMath::Max( Q2, Q2PDFmin );
+        Q2PDF = TMath::Min( Q2PDF, Q2PDFmax  );
+
+        // Compute SF
+        double tmp = -999;
+        if      ( sf==1 ) tmp = (pdf->xfxQ2(cpdf+1, xPDF, Q2PDF)-pdf->xfxQ2(cpdf+2, xPDF, Q2PDF)) / 2. /x;  //FL=F2-2xF1 -> F1=(F2-FL)/2/x 
+        else if ( sf==2 ) tmp = pdf->xfxQ2(cpdf+1, xPDF, Q2PDF);
+        else if ( sf==3 ) tmp = sign3 * pdf->xfxQ2(cpdf+3, xPDF, Q2PDF) / x;
+
+        // Save SF for particular x and Q2 in file
+        LOG("HEDISStrucFunc", pDEBUG) << "QrkSFLO" << sf << "[x=" << x << "," << Q2 << "] = " << tmp;
+        sf_stream << tmp << "  ";
+        
+      }
+    }
+  }
+
+  // Close file in which SF are stored
+  sf_stream.close();
+
+}
+#endif
 //____________________________________________________________________________
 string HEDISStrucFunc::QrkSFName( const Interaction * in) 
 {
@@ -589,6 +675,13 @@ string HEDISStrucFunc::NucSFName( const Interaction * in)
   return sin;
 }
 //____________________________________________________________________________
+string HEDISStrucFunc::SFName( const Interaction * in) 
+{
+  string sin = pdg::IsNeutrino(in->InitState().ProbePdg()) ? "nu_" : "nubar_";
+  sin += in->ProcInfo().IsWeakCC() ? "cc" : "nc";
+  return sin;
+}
+//____________________________________________________________________________
 int HEDISStrucFunc::QrkSFCode( const Interaction * in) 
 {
   int code = 10000000*pdg::IsNeutrino(in->InitState().ProbePdg());
@@ -605,6 +698,13 @@ int HEDISStrucFunc::NucSFCode( const Interaction * in)
   int code = 100*pdg::IsNeutrino(in->InitState().ProbePdg());
   code    += 10*in->ProcInfo().IsWeakCC();
   code    += 1*pdg::IsProton(in->InitState().Tgt().HitNucPdg());
+  return code;
+}
+//____________________________________________________________________________
+int HEDISStrucFunc::SFCode( const Interaction * in) 
+{
+  int code = 10*pdg::IsNeutrino(in->InitState().ProbePdg());
+  code    += 1*in->ProcInfo().IsWeakCC();
   return code;
 }
 //____________________________________________________________________________
@@ -635,6 +735,16 @@ SF_xQ2 HEDISStrucFunc::EvalNucSFNLO( const Interaction * in, double x, double Q2
   sf.F1 = fNucSFNLOTables[code].Table[kSFT1]->Evaluate(Q2,x);
   sf.F2 = fNucSFNLOTables[code].Table[kSFT2]->Evaluate(Q2,x);
   sf.F3 = fNucSFNLOTables[code].Table[kSFT3]->Evaluate(Q2,x);
+  return sf;
+}
+//____________________________________________________________________________
+SF_xQ2 HEDISStrucFunc::EvalSF( const Interaction * in, double x, double Q2 ) 
+{
+  int code = SFCode(in);
+  SF_xQ2 sf;
+  sf.F1 = fSFTables[code].Table[kSFT1]->Evaluate(Q2,x);
+  sf.F2 = fSFTables[code].Table[kSFT2]->Evaluate(Q2,x);
+  sf.F3 = fSFTables[code].Table[kSFT3]->Evaluate(Q2,x);
   return sf;
 }
 

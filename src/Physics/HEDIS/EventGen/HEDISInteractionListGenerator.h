@@ -42,7 +42,7 @@ public :
   // implement the InteractionListGeneratorI interface
   InteractionList * CreateInteractionList(const InitialState & init) const;
   InteractionList * CreateHEDISlist(vector<InitialState> vinit, 
-                                  vector<InteractionType_t> vinttype) const;
+                                  vector<InteractionType_t> vinttype, bool IsGridSF) const;
 
   // overload the Algorithm::Configure() methods to load private data
   // members from configuration options
@@ -59,6 +59,7 @@ private:
   
   bool fIsCC;
   bool fIsNC;
+  bool fIsGridSF;
 
 };
 

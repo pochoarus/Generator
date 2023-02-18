@@ -59,7 +59,7 @@ double HEDISXSec::Integrate(
 
   const KPhaseSpace & kps = in->PhaseSpace();
   if(!kps.IsAboveThreshold()) {
-     LOG("DISXSec", pDEBUG)  << "*** Below energy threshold";
+     LOG("HEDISXSec", pDEBUG)  << "*** Below energy threshold";
      return 0;
   }
 
@@ -103,12 +103,12 @@ double HEDISXSec::Integrate(
   LOG("HEDISXSec", pDEBUG) << "Q2 only kinematic range = [" << Q2l.min << ", " << Q2l.max << "]";
 
   if (xl.min < fSFXmin)  xl.min=fSFXmin;
+  if (xl.max > fSFXmax)  xl.max=fSFXmax;
   if (Q2l.min < fSFQ2min) Q2l.min=fSFQ2min;
   if (Q2l.max > fSFQ2max) Q2l.max=fSFQ2max;
 
   LOG("HEDISXSec", pDEBUG) << "X kinematic+PDF range = [" << xl.min << ", " << xl.max << "]";
   LOG("HEDISXSec", pDEBUG) << "Q2 kinematic+PDF range = [" << Q2l.min << ", " << Q2l.max << "]";
-
 
   bool phsp_ok = 
       (Q2l.min >= 0. && Q2l.max >= 0. && Q2l.max >= Q2l.min &&
@@ -168,6 +168,7 @@ void HEDISXSec::LoadConfig(void)
   // Limits from the SF tables that are useful to reduce computation 
   // time of the total cross section
   GetParam("XGrid-Min",  fSFXmin ) ;
+  GetParam("XGrid-Max",  fSFXmax ) ;
   GetParam("Q2Grid-Min", fSFQ2min ) ;
   GetParam("Q2Grid-Max", fSFQ2max ) ;
 

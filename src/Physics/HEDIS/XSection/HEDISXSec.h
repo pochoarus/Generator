@@ -45,6 +45,7 @@ private:
   void   LoadConfig (void);
 
   double fSFXmin;   ///< minimum value of x for which SF tables are computed
+  double fSFXmax;   ///< maximum value of x for which SF tables are computed
   double fSFQ2min;  ///< minimum value of Q2 for which SF tables are computed
   double fSFQ2max;  ///< maximum value of Q2 for which SF tables are computed
 

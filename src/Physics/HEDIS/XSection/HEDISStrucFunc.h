@@ -40,12 +40,13 @@ namespace genie {
 
     string LHAPDFset;
     int    LHAPDFmember;
+    bool   IsGridSF;
     bool   IsNLO;
     string Scheme;
     int    QrkThrs;
     int    NGridX;
     int    NGridQ2;
-    double XGridMin;
+    double XGridMin, XGridMax;
     double Q2GridMin, Q2GridMax;
     double MassW, MassZ;
     double Rho, Sin2ThW;
@@ -59,12 +60,14 @@ namespace genie {
     
     if ( a.LHAPDFmember != b.LHAPDFmember   ) return false;
     if ( a.LHAPDFset    != b.LHAPDFset      ) return false;
+    if ( a.IsGridSF     != b.IsGridSF       ) return false;
     if ( a.IsNLO        != b.IsNLO          ) return false;
     if ( a.Scheme       != b.Scheme         ) return false;
     if ( a.QrkThrs      != b.QrkThrs        ) return false;
     if ( a.NGridX       != b.NGridX         ) return false;
     if ( a.NGridQ2      != b.NGridQ2        ) return false;
     if ( abs(a.XGridMin-b.XGridMin)>1e-10   ) return false;
+    if ( abs(a.XGridMax-b.XGridMax)>1e-10   ) return false;
     if ( abs(a.Q2GridMin-b.Q2GridMin)>1e-10 ) return false;
     if ( abs(a.Q2GridMax-b.Q2GridMax)>1e-10 ) return false;
     if ( abs(a.MassW-b.MassW)>1e-10         ) return false;
@@ -95,6 +98,8 @@ namespace genie {
     std::getline (is,saux); a.LHAPDFset=saux.c_str();
     std::getline (is,saux); //# LHAPDF member
     std::getline (is,saux); a.LHAPDFmember=atoi(saux.c_str());
+    std::getline (is,saux); //#GridSF
+    std::getline (is,saux); a.IsGridSF=atoi(saux.c_str());
     std::getline (is,saux); //#NLO
     std::getline (is,saux); a.IsNLO=atoi(saux.c_str());
     std::getline (is,saux); //# Mass scheme
@@ -107,6 +112,8 @@ namespace genie {
     std::getline (is,saux); a.NGridQ2=atoi(saux.c_str());
     std::getline (is,saux); //# XGridMin
     std::getline (is,saux); a.XGridMin=atof(saux.c_str());
+    std::getline (is,saux); //# XGridMax
+    std::getline (is,saux); a.XGridMax=atof(saux.c_str());
     std::getline (is,saux); //# Q2min
     std::getline (is,saux); a.Q2GridMin=atof(saux.c_str());
     std::getline (is,saux); //# Q2max
@@ -143,6 +150,8 @@ namespace genie {
               << a.LHAPDFset     << '\n'
               << "# LHAPDF member" << '\n'
               << a.LHAPDFmember  << '\n'
+              << "# GridSF"        << '\n' 
+              << a.IsGridSF         << '\n' 
               << "# NLO"        << '\n' 
               << a.IsNLO         << '\n' 
               << "# Mass Scheme"       << '\n'
@@ -155,6 +164,8 @@ namespace genie {
               << a.NGridQ2       << '\n'
               << "# Xmin"     << '\n'
               << a.XGridMin      << '\n'
+              << "# Xmax"     << '\n'
+              << a.XGridMax      << '\n'
               << "# Q2min"    << '\n'
               << a.Q2GridMin     << '\n'
               << "# Q2max"    << '\n'
@@ -224,6 +235,7 @@ namespace genie {
       SF_xQ2 EvalQrkSFLO  ( const Interaction * in, double x, double Q2 );
       SF_xQ2 EvalNucSFLO  ( const Interaction * in, double x, double Q2 ); 
       SF_xQ2 EvalNucSFNLO ( const Interaction * in, double x, double Q2 );
+      SF_xQ2 EvalSF       ( const Interaction * in, double x, double Q2 );
 
     private:
 
@@ -234,11 +246,14 @@ namespace genie {
 
       void CreateQrkSF    ( const Interaction * in, string sfFile );
       void CreateNucSF    ( const Interaction * in, string sfFile );
+      void CreateSF       ( const Interaction * in, string sfFile );
 
       string  QrkSFName ( const Interaction * in ); 
       string  NucSFName ( const Interaction * in ) ;
+      string  SFName    ( const Interaction * in ) ;
       int     QrkSFCode ( const Interaction * in ); 
       int     NucSFCode ( const Interaction * in ) ;
+      int     SFCode    ( const Interaction * in ) ;
 
       // Self
       static HEDISStrucFunc * fgInstance;
@@ -247,6 +262,7 @@ namespace genie {
       map<int, HEDISStrucFuncTable> fQrkSFLOTables;
       map<int, HEDISStrucFuncTable> fNucSFLOTables;
       map<int, HEDISStrucFuncTable> fNucSFNLOTables;
+      map<int, HEDISStrucFuncTable> fSFTables;
 
       SF_info fSF;
       vector<double> sf_x_array;

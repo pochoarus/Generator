@@ -7,13 +7,14 @@
 
   <param_set name="HEDIS-SF">
     <param type="string" name="LHAPDF-set">    NNPDF31sx_nlo_as_0118_LHCb_nf_6 </param>
-    <param type="int"    name="LHAPDF-member">                               0 </param>
+    <param type="bool"   name="Is-GridSF">                               false </param>
     <param type="bool"   name="Is-NLO">                                   true </param>
     <param type="string" name="Scheme">                                   GGHR </param>
     <param type="int"    name="Quark-Threshold">                             2 </param>
     <param type="int"    name="NGridX">                                    400 </param>
     <param type="int"    name="NGridQ2">                                   400 </param>
     <param type="double" name="XGrid-Min">                                1e-9 </param>
+    <param type="double" name="XGrid-Max">                                  1. </param>
     <param type="double" name="Q2Grid-Min">                             2.6896 </param>
     <param type="double" name="Q2Grid-Max">                               1e10 </param>
     <param type="double" name="MassW">                                  80.385 </param>

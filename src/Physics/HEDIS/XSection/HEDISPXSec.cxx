@@ -72,22 +72,33 @@ double HEDISPXSec::XSec(
   double Mnuc  = init_state.Tgt().HitNucMass();
   double Mlep2 = TMath::Power(interaction->FSPrimLepton()->Mass(),2);
 
-  // Get F1,F2,F3 for particular quark channel and compute differential xsec
-  SF_xQ2 sf = sf_tbl->EvalQrkSFLO( interaction, x, Q2 );
-  double xsec = (fMassTerms) ? ds_dxdy_mass( sf, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sf, x, y );
+  double xsec = 0;
 
-  // If NLO is enable we compute sigma_NLO/sigma_LO. Then the quark xsec 
-  // is multiplied by this ratio.
-  // This is done because at NLO we can only compute the nucleon xsec. But
-  // for the hadronization we need the different quark contributions.
-  // This could be avoid if a NLO parton showering is introduced.
-  if (fSFinfo.IsNLO && xsec>0.) {
-    SF_xQ2 sflo  = sf_tbl->EvalNucSFLO(interaction,x,Q2);
-    SF_xQ2 sfnlo = sf_tbl->EvalNucSFNLO(interaction,x,Q2);
-    double lo  = (fMassTerms) ? ds_dxdy_mass( sflo, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sflo, x, y );
-    if (lo>0.) {
-      double nlo = (fMassTerms) ? ds_dxdy_mass( sfnlo, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sfnlo, x, y );
-      xsec *= nlo / lo;
+  SF_xQ2 sf;
+
+  if ( fSFinfo.IsGridSF ) {
+    // Get F1,F2,F3 for a particular nuclei and compute differential xsec
+    sf = sf_tbl->EvalSF( interaction, x, Q2 );
+    xsec = (fMassTerms) ? ds_dxdy_mass( sf, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sf, x, y );
+  }
+  else {
+    // Get F1,F2,F3 for particular quark channel and compute differential xsec
+    sf = sf_tbl->EvalQrkSFLO( interaction, x, Q2 );
+    xsec = (fMassTerms) ? ds_dxdy_mass( sf, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sf, x, y );
+
+    // If NLO is enable we compute sigma_NLO/sigma_LO. Then the quark xsec 
+    // is multiplied by this ratio.
+    // This is done because at NLO we can only compute the nucleon xsec. But
+    // for the hadronization we need the different quark contributions.
+    // This could be avoid if a NLO parton showering is introduced.
+    if (fSFinfo.IsNLO && xsec>0.) {
+      SF_xQ2 sflo  = sf_tbl->EvalNucSFLO(interaction,x,Q2);
+      SF_xQ2 sfnlo = sf_tbl->EvalNucSFNLO(interaction,x,Q2);
+      double lo  = (fMassTerms) ? ds_dxdy_mass( sflo, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sflo, x, y );
+      if (lo>0.) {
+        double nlo = (fMassTerms) ? ds_dxdy_mass( sfnlo, x, y, E, Mnuc, Mlep2 ) : ds_dxdy( sfnlo, x, y );
+        xsec *= nlo / lo;
+      }
     }
   }
 
@@ -200,13 +211,14 @@ void HEDISPXSec::LoadConfig(void)
 
   // Information about Structure Functions
   GetParam("LHAPDF-set",      fSFinfo.LHAPDFset    );
-  GetParam("LHAPDF-member",   fSFinfo.LHAPDFmember );
+  GetParam("Is-GridSF",       fSFinfo.IsGridSF     );
   GetParam("Is-NLO",          fSFinfo.IsNLO        );
   GetParam("Scheme",          fSFinfo.Scheme       );
   GetParam("Quark-Threshold", fSFinfo.QrkThrs      );
   GetParam("NGridX",          fSFinfo.NGridX       );
   GetParam("NGridQ2",         fSFinfo.NGridQ2      );
   GetParam("XGrid-Min",       fSFinfo.XGridMin     );
+  GetParam("XGrid-Max",       fSFinfo.XGridMax     );
   GetParam("Q2Grid-Min",      fSFinfo.Q2GridMin    );
   GetParam("Q2Grid-Max",      fSFinfo.Q2GridMax    );
   GetParam("MassW",           fSFinfo.MassW        );
