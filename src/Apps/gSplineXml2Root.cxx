@@ -151,7 +151,7 @@ double gEmin;
 double gEmax;
 bool gInlogE;
 int    kNP       = 300;
-int    kNSplineP = 5001;
+int    kNSplineP = 1000;
 const int    kPsType   = 111;  // ps type: portrait
 
 //____________________________________________________________________________
@@ -208,8 +208,8 @@ GEVGDriver GetEventGenDriver(void)
   GEVGDriver evg_driver;
   evg_driver.SetEventGeneratorList(RunOpt::Instance()->EventGeneratorList());
   evg_driver.Configure(init_state);
-  evg_driver.CreateSplines(kNSplineP, gEmax, true);
-  evg_driver.CreateXSecSumSpline (kNSplineP, gEmin, gEmax);
+  evg_driver.CreateSplines();
+  evg_driver.CreateXSecSumSpline (100, gEmin, gEmax);
 
   return evg_driver;
 }

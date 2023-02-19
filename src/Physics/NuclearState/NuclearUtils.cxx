@@ -390,7 +390,6 @@ double genie::utils::nuclear::DISNuclFactor(double x, int A)
   if(A > 2) {
     f *= (1.096 - 0.364*xv - 0.278*expaxv + 2.722*xvp);
   }
-  std::cout << x << " " << A << " " << f << std::endl;
   return f;
 }
 //___________________________________________________________________________
