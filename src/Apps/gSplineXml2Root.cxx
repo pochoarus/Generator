@@ -74,7 +74,7 @@
 
 \created December 15, 2005
 
-\cpright Copyright (c) 2003-2022, The GENIE Collaboration
+\cpright Copyright (c) 2003-2020, The GENIE Collaboration
          For the full text of the license visit http://copyright.genie-mc.org
 */
 //____________________________________________________________________________
@@ -151,7 +151,7 @@ double gEmin;
 double gEmax;
 bool gInlogE;
 int    kNP       = 300;
-int    kNSplineP = 1000;
+int    kNSplineP = 5001;
 const int    kPsType   = 111;  // ps type: portrait
 
 //____________________________________________________________________________
@@ -208,8 +208,8 @@ GEVGDriver GetEventGenDriver(void)
   GEVGDriver evg_driver;
   evg_driver.SetEventGeneratorList(RunOpt::Instance()->EventGeneratorList());
   evg_driver.Configure(init_state);
-  evg_driver.CreateSplines();
-  evg_driver.CreateXSecSumSpline (100, gEmin, gEmax);
+  evg_driver.CreateSplines(kNSplineP, gEmax, true);
+  evg_driver.CreateXSecSumSpline (kNSplineP, gEmin, gEmax);
 
   return evg_driver;
 }
@@ -613,8 +613,9 @@ void SaveGraphsToRootFile(void)
     else if (proc.IsIMDAnnihilation()  ) { title << "imdanh";}
     else if (proc.IsNuElectronElastic()) { title << "ve";    }
     else if (proc.IsGlashowResonance() ) { title << "glres"; }
-    else if (proc.IsPhotonResonance() )  { title << "phres"; }
-    else if (proc.IsPhotonCoherent() )   { title << "phcoh"; }
+    else if (proc.IsPhotonRES() )        { title << "phres"; }
+    else if (proc.IsPhotonCOH() )        { title << "phcoh"; }
+    else if (proc.IsGravity() )          { title << "grav";  }
     else                                 { 
       LOG("gspl2root", pWARN) << "Process " << proc
 			      << " scattering type not recognised: spline not added" ;
@@ -625,6 +626,7 @@ void SaveGraphsToRootFile(void)
     else if (proc.IsWeakMix()) { title << "_ccncmix"; }
     else if (proc.IsEM()    )  { title << "_em";      }
     else if (proc.IsDarkNeutralCurrent() )  { title << "_dark";  }
+    else if (proc.IsGravity() ) { title << "";  }
     else                       {
       LOG("gspl2root", pWARN) << "Process " << proc
                               << " interaction type has not recongnised: spline not added " ;
@@ -1062,7 +1064,7 @@ void SaveGraphsToRootFile(void)
              xsglresnc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
          }        
        } 
-       if (proc.IsPhotonResonance()) {
+       if (proc.IsPhotonRES()) {
          for(int i=0; i<kNSplineP; i++) { 
              xsphrescc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
          }    
@@ -1082,6 +1084,30 @@ void SaveGraphsToRootFile(void)
     FormatXSecGraph(gr_phrescc);
     topdir->Add(gr_phrescc);
 
+    //
+    // add-up all gravity
+    //
+
+    double * xsgrav = new double[kNSplineP];
+    for(int i=0; i<kNSplineP; i++) {
+       xsgrav[i] = 0;
+    }
+    for(ilistiter = ilist->begin(); ilistiter != ilist->end(); ++ilistiter) {    
+       const Interaction * interaction = *ilistiter;
+       const ProcessInfo &  proc = interaction->ProcInfo();
+
+       const Spline * spl = evg_driver.XSecSpline(interaction);
+ 
+       if (proc.IsGravity()) {
+         for(int i=0; i<kNSplineP; i++) { 
+             xsgrav[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
+         }        
+       } 
+    }
+    TGraph * gr_grav = new TGraph(kNSplineP, e, xsgrav);
+    gr_grav->SetName("grav");
+    FormatXSecGraph(gr_grav);
+    topdir->Add(gr_grav);
 
     //
     // total cross sections
@@ -1189,6 +1215,7 @@ void SaveGraphsToRootFile(void)
     delete [] xsglrescc;
     delete [] xsglresnc;
     delete [] xsphrescc;
+    delete [] xsgrav;
     delete [] xstotcc;
     delete [] xstotccp;
     delete [] xstotccn;

@@ -1,6 +1,6 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2022, The GENIE Collaboration
+ Copyright (c) 2003-2020, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
 
  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
@@ -144,11 +144,11 @@ int Interaction::FSPrimLeptonPdg(void) const
   if (proc_info.IsNuElectronElastic())
     return kPdgElectron;
 
-  if (proc_info.IsGlashowResonance() || proc_info.IsPhotonResonance())
+  if (proc_info.IsGlashowResonance() || proc_info.IsPhotonRES())
     return xclstag.FinalLeptonPdg();
 
   // vN (Weak-NC) or eN (EM)
-  if (proc_info.IsWeakNC() || proc_info.IsEM() || proc_info.IsWeakMix() || proc_info.IsDarkMatter()) return pdgc;  // EDIT: DM does not change in FS
+  if (proc_info.IsWeakNC() || proc_info.IsEM() || proc_info.IsWeakMix() || proc_info.IsDarkMatter() || proc_info.IsGravity()) return pdgc;  // EDIT: DM does not change in FS
 
   // vN (Weak-CC)
   else if (proc_info.IsWeakCC()) {
@@ -1101,6 +1101,31 @@ Interaction * Interaction::DMDI(
   Target * tgt = interaction->InitStatePtr()->TgtPtr();
   tgt -> SetHitQrkPdg (hitqrk);
   tgt -> SetHitSeaQrk (fromsea);
+
+  return interaction;
+}
+//___________________________________________________________________________
+Interaction * Interaction::Gravity(int target, int hitnuc, int probe, double E)
+{
+  Interaction * interaction =
+     Interaction::Create(target,probe,kScGravity, kIntGravity);
+
+  InitialState * init_state = interaction->InitStatePtr();
+  init_state->SetProbeE(E);
+  init_state->TgtPtr()->SetHitNucPdg(hitnuc);
+
+  return interaction;
+}
+//___________________________________________________________________________
+Interaction * Interaction::Gravity(
+   int target, int hitnuc, int probe, const TLorentzVector & p4probe)
+{
+  Interaction * interaction =
+     Interaction::Create(target,probe,kScGravity, kIntGravity);
+
+  InitialState * init_state = interaction->InitStatePtr();
+  init_state->SetProbeP4(p4probe);
+  init_state->TgtPtr()->SetHitNucPdg(hitnuc);
 
   return interaction;
 }

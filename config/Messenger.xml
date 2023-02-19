@@ -222,6 +222,10 @@
   <priority msgstream="HEDISKinematics">       WARN    </priority>
   <priority msgstream="HEDISStrucFunc">        WARN    </priority>
   <priority msgstream="LeptoHad">              ERROR   </priority>
+  <priority msgstream="GravityXSec">           DEBUG    </priority>
+  <priority msgstream="GravityPXSec">          WARN    </priority>
+  <priority msgstream="GravityGenerator">      WARN    </priority>
+  <priority msgstream="GravityKinematics">     WARN    </priority>
 
   <priority msgstream="gevgen">              WARN </priority>
   <priority msgstream="gevgen_dm">           NOTICE </priority>
@@ -240,5 +244,6 @@
   <priority msgstream="gcalchedisdiffxsec">  INFO   </priority>
   <priority msgstream="gmkhedissf">          INFO   </priority>
   <priority msgstream="gmkphotonsf">         INFO   </priority>
+  <priority msgstream="gcalcby">             INFO   </priority>
 
 </messenger_config>

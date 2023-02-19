@@ -16,7 +16,7 @@
 
 \created  April 25, 2004
 
-\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2020, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
 */
 //____________________________________________________________________________
@@ -165,6 +165,8 @@ public:
   static Interaction * DMDI      (int tgt, int nuc, int qrk, bool sea, int probe, double E=0);
   static Interaction * DMDI      (int tgt, int nuc, int probe, const TLorentzVector & p4probe);
   static Interaction * DMDI      (int tgt, int nuc, int qrk, bool sea, int probe, const TLorentzVector & p4probe);
+  static Interaction * Gravity   (int tgt, int nuc, int probe, double E=0);
+  static Interaction * Gravity   (int tgt, int nuc, int probe, const TLorentzVector & p4probe);
 
 private:
 

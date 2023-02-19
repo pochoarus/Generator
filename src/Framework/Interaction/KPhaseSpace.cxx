@@ -1,6 +1,6 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2022, The GENIE Collaboration
+ Copyright (c) 2003-2020, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
 
  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
@@ -202,18 +202,26 @@ double KPhaseSpace::Threshold(void) const
     double Ethr = 0.5 * (ml*ml-kElectronMass2)/kElectronMass;
     return TMath::Max(0.,Ethr);
   }
-  if(pi.IsPhotonResonance()) {
+  if(pi.IsPhotonRES()) {
     double Mn = tgt.HitNucP4Ptr()->M();
     double Ethr = 0.5 * (ml*ml-TMath::Power(Mn,2))/Mn;
     return TMath::Max(0.,Ethr);
   }
-  if(pi.IsPhotonCoherent()) {
+  if(pi.IsPhotonCOH()) {
     double ml = 0;
     if      (pdg::IsNuE  (TMath::Abs(init_state.ProbePdg()))) ml = kElectronMass;
     else if (pdg::IsNuMu (TMath::Abs(init_state.ProbePdg()))) ml = kMuonMass;
     else if (pdg::IsNuTau(TMath::Abs(init_state.ProbePdg()))) ml = kTauMass;
     double MA = init_state.Tgt().Z()*kProtonMass + init_state.Tgt().N()*kNeutronMass;
     double Ethr = 0.5 * (TMath::Power(kMw+ml,2)-TMath::Power(MA,2))/MA;
+    return TMath::Max(0.,Ethr);
+  }
+  if(pi.IsGravity()) {
+    double Mn   = tgt.HitNucP4Ptr()->M();
+    double Mn2  = TMath::Power(Mn,2);
+    double Wmin = kNucleonMass;
+    double smin = TMath::Power(Wmin+ml,2.);
+    double Ethr = 0.5*(smin-Mn2)/Mn;
     return TMath::Max(0.,Ethr);
   }
 
@@ -275,8 +283,8 @@ bool KPhaseSpace::IsAboveThreshold(void) const
       pi.IsNuElectronElastic()  ||
       pi.IsDarkMatterElectronElastic() ||
       pi.IsMEC()                ||
-      pi.IsPhotonCoherent()          || 
-      pi.IsPhotonResonance()          || 
+      pi.IsPhotonCOH()          || 
+      pi.IsPhotonRES()          || 
       pi.IsGlashowResonance())
   {
       E = init_state.ProbeE(kRfLab);

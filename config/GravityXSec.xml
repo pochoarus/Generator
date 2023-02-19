@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+Configuration for the Gravity integration algorithm
+-->
+
+<alg_conf>
+
+  <param_set name="Default"> 
+
+    <param type="string" name="CommonParam">      GRAVITY,HEDIS-SF  </param>
+    <param type="string" name ="gsl-integration-type">       vegas  </param>
+    <param type="int"    name ="gsl-max-eval" >             200000  </param>
+    <param type="double" name ="Q2min" >                        1.  </param>
+  </param_set>
+
+</alg_conf>

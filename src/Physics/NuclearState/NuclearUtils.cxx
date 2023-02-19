@@ -1,6 +1,6 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2022, The GENIE Collaboration
+ Copyright (c) 2003-2020, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
  
 
@@ -390,6 +390,7 @@ double genie::utils::nuclear::DISNuclFactor(double x, int A)
   if(A > 2) {
     f *= (1.096 - 0.364*xv - 0.278*expaxv + 2.722*xvp);
   }
+  std::cout << x << " " << A << " " << f << std::endl;
   return f;
 }
 //___________________________________________________________________________

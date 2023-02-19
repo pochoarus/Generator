@@ -34,7 +34,9 @@ TGT_BASE =  gevgen             \
             gsfcomp            \
             gmkhedissf         \
             gcalchedisdiffxsec \
+            gcalcgravity       \
             gmkphotonsf        \
+            gcalcby            \
             gconfigdump
 
 ifeq ($(strip $(GOPT_ENABLE_FNAL)),YES)
@@ -252,6 +254,12 @@ $(GENIE_BIN_PATH)/gcalchedisdiffxsec: gCalcHEDISDiffXsec.o $(call find_libs,gcal
 	@echo "** Building gcalchedisdiffxsec"
 	$(LD) $(LDFLAGS) gCalcHEDISDiffXsec.o $(LIBRARIES) -o $(GENIE_BIN_PATH)/gcalchedisdiffxsec
 
+# App to calculate differential cross sections from HEDIS
+#
+$(GENIE_BIN_PATH)/gcalcgravity: gCalcGravity.o $(call find_libs,gcalcgravity)
+	@echo "** Building gcalcgravity"
+	$(LD) $(LDFLAGS) gCalcGravity.o $(LIBRARIES) -o $(GENIE_BIN_PATH)/gcalcgravity
+
 # App to create structure functions suitable for HELepton
 #
 $(GENIE_BIN_PATH)/gmkphotonsf: gMakePhotonStrucFunc.o $(call find_libs,gmkphotonsf)
@@ -263,6 +271,12 @@ $(GENIE_BIN_PATH)/gmkphotonsf: gMakePhotonStrucFunc.o $(call find_libs,gmkphoton
 $(GENIE_BIN_PATH)/gmkhedissf: gMakeHEDISStrucFunc.o $(call find_libs,gmkhedissf)
 	@echo "** Building gmkhedissf"
 	$(LD) $(LDFLAGS) gMakeHEDISStrucFunc.o $(LIBRARIES) -o $(GENIE_BIN_PATH)/gmkhedissf
+
+# App to create structure functions suitable for HEDIS
+#
+$(GENIE_BIN_PATH)/gmkhedissf: gCalcBY.o $(call find_libs,gcalcby)
+	@echo "** Building gcalcby"
+	$(LD) $(LDFLAGS) gCalcBY.o $(LIBRARIES) -o $(GENIE_BIN_PATH)/gcalcby
 
 # App to dump the full configuration
 #

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<alg_conf>
+
+<!--
+Configuration for the GravityKinematicsGenerator EventRecordVisitorI
+
+Algorithm Configurable Parameters:
+.......................................................................................................................
+Name                     Type    Opt   Comment                                        Default
+.......................................................................................................................
+MaxXSec-SafetyFactor     double  Yes   multiplies max xsec in rejection method        1.2
+-->
+
+  <param_set name="Default"> 
+     <param type="string" name="CommonParam">     GRAVITY,HEDIS-SF </param>
+     <param type="double" name="MaxXSec-SafetyFactor">         1.2 </param>
+  </param_set>
+
+</alg_conf>
+
