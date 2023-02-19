@@ -1,6 +1,6 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2020, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
 
  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
@@ -144,7 +144,7 @@ int Interaction::FSPrimLeptonPdg(void) const
   if (proc_info.IsNuElectronElastic())
     return kPdgElectron;
 
-  if (proc_info.IsGlashowResonance() || proc_info.IsPhotonRES())
+  if (proc_info.IsGlashowResonance() || proc_info.IsPhotonResonance())
     return xclstag.FinalLeptonPdg();
 
   // vN (Weak-NC) or eN (EM)

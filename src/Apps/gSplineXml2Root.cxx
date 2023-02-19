@@ -74,7 +74,7 @@
 
 \created December 15, 2005
 
-\cpright Copyright (c) 2003-2020, The GENIE Collaboration
+\cpright Copyright (c) 2003-2022, The GENIE Collaboration
          For the full text of the license visit http://copyright.genie-mc.org
 */
 //____________________________________________________________________________
@@ -613,8 +613,8 @@ void SaveGraphsToRootFile(void)
     else if (proc.IsIMDAnnihilation()  ) { title << "imdanh";}
     else if (proc.IsNuElectronElastic()) { title << "ve";    }
     else if (proc.IsGlashowResonance() ) { title << "glres"; }
-    else if (proc.IsPhotonRES() )        { title << "phres"; }
-    else if (proc.IsPhotonCOH() )        { title << "phcoh"; }
+    else if (proc.IsPhotonResonance() )  { title << "phres"; }
+    else if (proc.IsPhotonCoherent() )   { title << "phcoh"; }
     else if (proc.IsGravity() )          { title << "grav";  }
     else                                 { 
       LOG("gspl2root", pWARN) << "Process " << proc
@@ -1064,7 +1064,7 @@ void SaveGraphsToRootFile(void)
              xsglresnc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
          }        
        } 
-       if (proc.IsPhotonRES()) {
+       if (proc.IsPhotonResonance()) {
          for(int i=0; i<kNSplineP; i++) { 
              xsphrescc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
          }    
