@@ -222,7 +222,7 @@
   <priority msgstream="HEDISKinematics">       WARN    </priority>
   <priority msgstream="HEDISStrucFunc">        WARN    </priority>
   <priority msgstream="LeptoHad">              ERROR   </priority>
-  <priority msgstream="GravityXSec">           DEBUG    </priority>
+  <priority msgstream="GravityXSec">           WARN    </priority>
   <priority msgstream="GravityPXSec">          WARN    </priority>
   <priority msgstream="GravityGenerator">      WARN    </priority>
   <priority msgstream="GravityKinematics">     WARN    </priority>
