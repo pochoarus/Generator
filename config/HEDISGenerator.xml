@@ -9,6 +9,7 @@ Configuration sets for HEDISGenerator EventRecordVisitorI
 -->
 
   <param_set name="Default"> 
+     <param type="string" name="CommonParam">                               HEDIS-SF                  </param>
      <param type="alg"  name="Hadronizer">          genie::LeptoHadronization/Default                 </param>
 
   </param_set>
