@@ -50,6 +50,8 @@ private:
 
   const EventRecordVisitorI * fHadronizationModel;
 
+  bool fIsGridSF;
+
 };
 
 }      // genie namespace

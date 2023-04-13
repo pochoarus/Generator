@@ -20,6 +20,7 @@
 #include "Framework/Numerical/RandomGen.h"
 #include "Framework/Numerical/MathUtils.h"
 #include "Framework/Conventions/Constants.h"
+#include "Framework/ParticleData/PDGCodes.h"
 
 #include <RVersion.h>
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,15,6)
@@ -67,7 +68,17 @@ void HEDISGenerator::ProcessEventRecord(GHepRecord * evrec) const
   this->AddPrimaryLepton(evrec);
 
   //-- Run the hadronization model and get the fragmentation products
-  fHadronizationModel->ProcessEventRecord(evrec);
+  if (fIsGridSF) {
+    LongLorentzVector p4v( * evrec->Probe()->P4()                   );
+    LongLorentzVector p4N( * evrec->HitNucleon()->P4()              );
+    LongLorentzVector p4l( * evrec->FinalStatePrimaryLepton()->P4() );
+    LongLorentzVector p4Hadlong( p4v.Px()+p4N.Px()-p4l.Px(), p4v.Py()+p4N.Py()-p4l.Py(), p4v.Pz()+p4N.Pz()-p4l.Pz(), p4v.E()+p4N.E()-p4l.E() );
+    TLorentzVector p4Had( (double)p4Hadlong.Px(), (double)p4Hadlong.Py(), (double)p4Hadlong.Pz(), (double)p4Hadlong.E() );
+    evrec->AddParticle(kPdgHadronicSyst, kIStStableFinalState, evrec->HitNucleonPosition(),-1,-1,-1, p4Had, *(evrec->Probe()->X4()));
+  }
+  else {
+    fHadronizationModel->ProcessEventRecord(evrec);
+  }
 
 }
 //___________________________________________________________________________
@@ -129,11 +140,17 @@ void HEDISGenerator::Configure(string config)
 //____________________________________________________________________________
 void HEDISGenerator::LoadConfig(void)
 {
+
+  GetParam("Is-GridSF", fIsGridSF ) ;
+
   fHadronizationModel = 0;
 
-  //-- Get the requested hadronization model
-  fHadronizationModel =
-     dynamic_cast<const EventRecordVisitorI *> (this->SubAlg("Hadronizer"));
-  assert(fHadronizationModel);
+  if (!fIsGridSF) {
+    //-- Get the requested hadronization model
+    fHadronizationModel =
+       dynamic_cast<const EventRecordVisitorI *> (this->SubAlg("Hadronizer"));
+    assert(fHadronizationModel);
+  }
+
 
 }
