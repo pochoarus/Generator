@@ -49,8 +49,8 @@ source setup.sh
 
 #download nnsfnu grid files (in this example we use Oxygen)
 cd $GENIE/data/evgen/pdfs/
-wget https://data.nnpdf.science/NNSFnu/NNSFnu_O_lowQ.tar.gz
-wget https://data.nnpdf.science/NNSFnu/NNSFnu_O_highQ.tar.gz
+wget http://lhapdfsets.web.cern.ch/lhapdfsets/current/NNSFnu_O_lowQ.tar.gz
+wget http://lhapdfsets.web.cern.ch/lhapdfsets/current/NNSFnu_O_highQ.tar.gz
 tar xvfz NNSFnu_O_lowQ.tar.gz
 tar xvfz NNSFnu_O_highQ.tar.gz
 rm NNSFnu_O_lowQ.tar.gz
